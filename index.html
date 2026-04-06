@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Force of Nature — Batch Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.1);
+    --text: #1a1a18;
+    --muted: #888880;
+    --faint: #b8b8b0;
+    --accent: #1a5c3a;
+    --accent-light: #e8f2ec;
+    --accent-text: #1a5c3a;
+    --warn: #7a4a10;
+    --warn-light: #fdf3e7;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111110;
+      --surface: #1c1c1a;
+      --border: rgba(255,255,255,0.08);
+      --text: #f0efe9;
+      --muted: #888880;
+      --faint: #444440;
+      --accent: #4db87a;
+      --accent-light: #0f2a1a;
+      --accent-text: #4db87a;
+      --warn: #e09040;
+      --warn-light: #1f1408;
+    }
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 1.5rem;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 380px;
+  }
+
+  .header {
+    margin-bottom: 2rem;
+  }
+
+  .header-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .header-title {
+    font-size: 26px;
+    font-weight: 300;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .field {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .field:last-child {
+    border-bottom: none;
+  }
+
+  .field-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+
+  .field-value {
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .field-value.muted {
+    color: var(--faint);
+  }
+
+  input[type="date"] {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--text);
+    background: transparent;
+    border: none;
+    outline: none;
+    width: 100%;
+    cursor: pointer;
+    letter-spacing: -0.01em;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0.4;
+    cursor: pointer;
+    filter: var(--cal-icon-filter, none);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+    }
+  }
+
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .badge-fresh {
+    background: var(--accent-light);
+    color: var(--accent-text);
+  }
+
+  .badge-warn {
+    background: var(--warn-light);
+    color: var(--warn);
+  }
+
+  .badge-hidden {
+    display: none;
+  }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 15px 20px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--text);
+    color: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    cursor: pointer;
+    text-align: center;
+    letter-spacing: -0.01em;
+    transition: opacity 0.15s;
+    margin-bottom: 10px;
+  }
+
+  .btn:hover { opacity: 0.82; }
+  .btn:active { opacity: 0.7; transform: scale(0.99); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    font-size: 13px;
+    padding: 12px 20px;
+  }
+
+  .hint {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--faint);
+    text-align: center;
+    line-height: 1.6;
+    margin-top: 4px;
+  }
+
+  .divider-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--faint);
+    text-align: center;
+    margin: 14px 0;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  a { display: none; }
+
+  @keyframes fadein {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .container { animation: fadein 0.3s ease; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <p class="header-eyebrow">Electrolyzer</p>
+    <h1 class="header-title">Force of Nature<br>batch tracker</h1>
+  </div>
+
+  <div class="card">
+    <div class="field">
+      <p class="field-label">Date made</p>
+      <input type="date" id="made-date" autocomplete="off">
+    </div>
+    <div class="field">
+      <p class="field-label">Expires</p>
+      <div class="status-row">
+        <span class="field-value muted" id="expiry-date">—</span>
+        <span class="badge badge-hidden" id="status-badge"></span>
+      </div>
+    </div>
+    <div class="field">
+      <p class="field-label">Days remaining</p>
+      <span class="field-value muted" id="days-remaining">—</span>
+    </div>
+  </div>
+
+  <button class="btn" onclick="openCalendar()">Add to Google Calendar →</button>
+  <p class="hint">Creates expiry event + reminder 2 days before</p>
+
+  <div class="divider-label">or</div>
+
+  <button class="btn btn-ghost" onclick="downloadICS()">Download .ics (Apple Calendar)</button>
+
+  <a id="cal-link" target="_blank" rel="noopener"></a>
+  <a id="ics-link" download="force-of-nature.ics"></a>
+
+</div>
+
+<script>
+  const SHELF_DAYS = 14;
+  const REMIND_DAYS_BEFORE = 2;
+
+  const dateInput  = document.getElementById('made-date');
+  const expiryEl   = document.getElementById('expiry-date');
+  const daysEl     = document.getElementById('days-remaining');
+  const badgeEl    = document.getElementById('status-badge');
+
+  function pad(n) { return String(n).padStart(2,'0'); }
+
+  function toDateStr(d) {
+    return d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate());
+  }
+
+  function toICSDate(d) {
+    return d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate());
+  }
+
+  function addDays(d, n) {
+    const r = new Date(d);
+    r.setDate(r.getDate() + n);
+    return r;
+  }
+
+  function getExpiry() {
+    if (!dateInput.value) return null;
+    const made = new Date(dateInput.value + 'T12:00:00');
+    return addDays(made, SHELF_DAYS);
+  }
+
+  function getMade() {
+    if (!dateInput.value) return null;
+    return new Date(dateInput.value + 'T12:00:00');
+  }
+
+  function formatDate(d) {
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function update() {
+    const expiry = getExpiry();
+    if (!expiry) return;
+
+    expiryEl.textContent = formatDate(expiry);
+    expiryEl.classList.remove('muted');
+
+    const today = new Date();
+    today.setHours(12,0,0,0);
+    const diff = Math.round((expiry - today) / (1000*60*60*24));
+
+    if (diff < 0) {
+      daysEl.textContent = 'Expired ' + Math.abs(diff) + ' day' + (Math.abs(diff)!==1?'s':'') + ' ago';
+      badgeEl.textContent = 'expired';
+      badgeEl.className = 'badge badge-warn';
+    } else if (diff === 0) {
+      daysEl.textContent = 'Expires today';
+      badgeEl.textContent = 'today';
+      badgeEl.className = 'badge badge-warn';
+    } else if (diff <= REMIND_DAYS_BEFORE) {
+      daysEl.textContent = diff + ' day' + (diff!==1?'s':'') + ' left';
+      badgeEl.textContent = 'expiring soon';
+      badgeEl.className = 'badge badge-warn';
+    } else {
+      daysEl.textContent = diff + ' days left';
+      badgeEl.textContent = 'fresh';
+      badgeEl.className = 'badge badge-fresh';
+    }
+  }
+
+  function setToday() {
+    const now = new Date();
+    dateInput.value = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate());
+    update();
+  }
+
+  function openCalendar() {
+    const expiry = getExpiry();
+    const made   = getMade();
+    if (!expiry) { alert('Select a date first'); return; }
+
+    const dateStr    = toDateStr(expiry);
+    const remind     = addDays(expiry, -REMIND_DAYS_BEFORE);
+    const remindStr  = toDateStr(remind);
+
+    const title   = encodeURIComponent('Force of Nature expires');
+    const details = encodeURIComponent('Batch made ' + formatDate(made) + '. Expires ' + formatDate(expiry) + '.');
+
+    const url = 'https://calendar.google.com/calendar/r/eventedit'
+      + '?text=' + title
+      + '&dates=' + dateStr + '/' + dateStr
+      + '&details=' + details;
+
+    const link = document.getElementById('cal-link');
+    link.href = url;
+    link.click();
+  }
+
+  function downloadICS() {
+    const expiry = getExpiry();
+    const made   = getMade();
+    if (!expiry) { alert('Select a date first'); return; }
+
+    const remind = addDays(expiry, -REMIND_DAYS_BEFORE);
+
+    function icsDate(d) { return toICSDate(d); }
+    function icsDateTime(d) {
+      return d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate())
+        + 'T' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
+    }
+
+    const uid = 'fon-' + Date.now() + '@batchtracker';
+    const now = new Date();
+
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Force of Nature Batch Tracker//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'BEGIN:VEVENT',
+      'UID:' + uid,
+      'DTSTAMP:' + icsDateTime(now) + 'Z',
+      'DTSTART;VALUE=DATE:' + icsDate(expiry),
+      'DTEND;VALUE=DATE:' + icsDate(addDays(expiry,1)),
+      'SUMMARY:Force of Nature expires',
+      'DESCRIPTION:Batch made ' + formatDate(made) + '. Expires ' + formatDate(expiry) + '.',
+      'BEGIN:VALARM',
+      'TRIGGER:-P' + REMIND_DAYS_BEFORE + 'D',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:Force of Nature expires in ' + REMIND_DAYS_BEFORE + ' days',
+      'END:VALARM',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const link = document.getElementById('ics-link');
+    link.href  = url;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
+
+  dateInput.addEventListener('change', update);
+  setToday();
+</script>
+</body>
+</html>
