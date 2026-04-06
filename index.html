@@ -259,12 +259,12 @@
     </div>
   </div>
 
-  <button class="btn" onclick="downloadICS()">Add to Google Calendar →</button>
-  <p class="hint">Downloads .ics — opens in Google Calendar with 2-day reminder already set</p>
+  <button class="btn" onclick="openCalendar()">Add to Google Calendar →</button>
+  <p class="hint">Creates expiry event + reminder 2 days before</p>
 
   <div class="divider-label">or</div>
 
-  <button class="btn btn-ghost" onclick="openCalendar()">Open Google Calendar manually</button>
+  <button class="btn btn-ghost" onclick="downloadICS()">Download .ics (Apple Calendar)</button>
 
   <a id="cal-link" target="_blank" rel="noopener"></a>
   <a id="ics-link" download="force-of-nature.ics"></a>
