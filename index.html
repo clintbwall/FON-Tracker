@@ -272,7 +272,7 @@
 </div>
 
 <script>
-  const SHELF_DAYS = 14;
+  const SHELF_DAYS = 16;
   const REMIND_DAYS_BEFORE = 2;
 
   const dateInput  = document.getElementById('made-date');
@@ -362,7 +362,8 @@
     const url = 'https://calendar.google.com/calendar/r/eventedit'
       + '?text=' + title
       + '&dates=' + dateStr + '/' + dateStr
-      + '&details=' + details;
+      + '&details=' + details
+      + '&add=clintbwall@gmail.com,brittanylbontempo@gmail.com';
 
     const link = document.getElementById('cal-link');
     link.href = url;
