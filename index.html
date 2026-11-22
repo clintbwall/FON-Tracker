@@ -260,7 +260,8 @@
   </div>
 
   <button class="btn" onclick="openCalendar()">Add to Google Calendar →</button>
-  <p class="hint">Creates expiry event + reminder 2 days before</p>
+  <p class="hint" id="cal-hint">Step 1 of 2: adds the expiry day</p>
+  <button class="btn" id="remind-btn" onclick="openReminder()" style="display:none;margin-top:10px">Add 2-day reminder →</button>
 
   <div class="divider-label">or</div>
 
@@ -314,6 +315,8 @@
   function update() {
     const expiry = getExpiry();
     if (!expiry) return;
+    const rb = document.getElementById('remind-btn');
+    if (rb) { rb.style.display = 'none'; document.getElementById('cal-hint').textContent = 'Step 1 of 2: adds the expiry day'; }
 
     expiryEl.textContent = formatDate(expiry);
     expiryEl.classList.remove('muted');
@@ -352,17 +355,35 @@
     const made   = getMade();
     if (!expiry) { alert('Select a date first'); return; }
 
-    const dateStr    = toDateStr(expiry);
-    const remind     = addDays(expiry, -REMIND_DAYS_BEFORE);
-    const remindStr  = toDateStr(remind);
+    openGoogleEvent('Force of Nature expires', expiry,
+      'Batch made ' + formatDate(made) + '. Expires ' + formatDate(expiry) + '.');
 
-    const title   = encodeURIComponent('Force of Nature expires');
-    const details = encodeURIComponent('Batch made ' + formatDate(made) + '. Expires ' + formatDate(expiry) + '.');
+    // Google's add-event link can't set a reminder, so the 2-day heads-up is its own event.
+    const remind = addDays(expiry, -REMIND_DAYS_BEFORE);
+    const btn = document.getElementById('remind-btn');
+    btn.textContent = 'Add 2-day reminder (' + formatDate(remind) + ') →';
+    btn.style.display = '';
+    document.getElementById('cal-hint').textContent = 'Step 2 of 2: add the reminder below';
+  }
 
+  function openReminder() {
+    const expiry = getExpiry();
+    const made   = getMade();
+    if (!expiry) { alert('Select a date first'); return; }
+    openGoogleEvent('Force of Nature expires in ' + REMIND_DAYS_BEFORE + ' days', addDays(expiry, -REMIND_DAYS_BEFORE),
+      'Batch made ' + formatDate(made) + '. Expires ' + formatDate(expiry) + '. Time to make a new batch.');
+    document.getElementById('remind-btn').style.display = 'none';
+    document.getElementById('cal-hint').textContent = 'Both events added';
+  }
+
+  // Opens Google Calendar's add-event page for an all-day event on the given day.
+  function openGoogleEvent(title, day, details) {
+    const start = toDateStr(day);
+    const end   = toDateStr(addDays(day, 1)); // all-day end date is exclusive
     const url = 'https://calendar.google.com/calendar/r/eventedit'
-      + '?text=' + title
-      + '&dates=' + dateStr + '/' + dateStr
-      + '&details=' + details
+      + '?text=' + encodeURIComponent(title)
+      + '&dates=' + start + '/' + end
+      + '&details=' + encodeURIComponent(details)
       + '&add=clintbwall@gmail.com,brittanylbontempo@gmail.com';
 
     const link = document.getElementById('cal-link');
